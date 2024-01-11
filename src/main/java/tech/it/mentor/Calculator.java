@@ -25,7 +25,7 @@ public class Calculator {
     }
 
     private void validateExpression(String expression) {
-        extractNumbers(expression);
+        validateNumbersInExpression(expression);
         if (!expression.matches(".*[0-9]+[+\\-*/]+[0-9]+.*") ||
                 expression.matches(".*[+\\-*/]{2,}.*") ||
                 expression.matches(".*[+\\-*/]$")) {
@@ -33,7 +33,7 @@ public class Calculator {
         }
     }
 
-    public static void extractNumbers(String inputString) {
+    public void validateNumbersInExpression(String inputString) {
 
         Pattern pattern = Pattern.compile("\\d+\\.\\d+|\\d+");
         Matcher matcher = pattern.matcher(inputString);

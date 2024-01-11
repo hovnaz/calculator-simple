@@ -33,7 +33,7 @@ public class Calculator {
         }
     }
 
-    public void validateNumbersInExpression(String inputString) {
+    private void validateNumbersInExpression(String inputString) {
 
         Pattern pattern = Pattern.compile("\\d+\\.\\d+|\\d+");
         Matcher matcher = pattern.matcher(inputString);

@@ -4,45 +4,14 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 public class Calculator {
 
-    private static final Map<String, CalculatorOperator> operators = new HashMap<>();
+    private final Map<String, CalculatorOperator> operators = new HashMap<>();
 
-
-    static {
-        setOperator(new CalculatorOperator("plus", "+", Priority.LOW) {
-            @Override
-            public BigDecimal action(BigDecimal leftOperand, BigDecimal rightOperand) {
-                return leftOperand.add(rightOperand);
-            }
-        });
-
-        setOperator(new CalculatorOperator("minus", "-", Priority.LOW) {
-            @Override
-            public BigDecimal action(BigDecimal leftOperand, BigDecimal rightOperand) {
-                return leftOperand.subtract(rightOperand);
-            }
-        });
-        setOperator(new CalculatorOperator("multiply", "*", Priority.HIGH) {
-            @Override
-            public BigDecimal action(BigDecimal leftOperand, BigDecimal rightOperand) {
-                return leftOperand.multiply(rightOperand);
-            }
-        });
-        setOperator(new CalculatorOperator("divide", "/", Priority.HIGH) {
-            @Override
-            public BigDecimal action(BigDecimal leftOperand, BigDecimal rightOperand) {
-                if (rightOperand.equals(BigDecimal.ZERO)) {
-                    throw new InvalidExpressionException("Cannot divide by zero");
-                }
-                return leftOperand.divide(rightOperand, 2, RoundingMode.HALF_UP);
-            }
-        });
-    }
-
-    private static void setOperator(CalculatorOperator operator) {
-        operators.put(operator.getOperator(), operator);
+    public Calculator() {
+        initializeOperators();
     }
 
     public BigDecimal calc(String input) {
@@ -82,7 +51,7 @@ public class Calculator {
 
         BigDecimal leftOperand = new BigDecimal(leftOperands[leftOperands.length - 1]);
         BigDecimal rightOperand = new BigDecimal(rightOperands[0]);
-        BigDecimal result = operators.get(String.valueOf(expression.charAt(operatorIndex))).action(leftOperand, rightOperand);
+        BigDecimal result = operators.get(String.valueOf(expression.charAt(operatorIndex))).performOperation(leftOperand, rightOperand);
 
         StringBuilder builder = new StringBuilder(expression);
         builder.replace(operatorIndex - leftOperand.toString().length(), operatorIndex + rightOperand.toString().length() + 1, result.toString());
@@ -98,5 +67,26 @@ public class Calculator {
             }
             expression = performOperationAtIndex(expression, priorityOperatorIndex);
         }
+    }
+
+    private void addOperator(String name, String symbol, Priority priority, BiFunction<BigDecimal, BigDecimal, BigDecimal> operation) {
+        operators.put(symbol, new CalculatorOperator(name, symbol, priority) {
+            @Override
+            public BigDecimal performOperation(BigDecimal leftOperand, BigDecimal rightOperand) {
+                return operation.apply(leftOperand, rightOperand);
+            }
+        });
+    }
+
+    private void initializeOperators() {
+        addOperator("plus", "+", Priority.LOW, BigDecimal::add);
+        addOperator("minus", "-", Priority.LOW, BigDecimal::subtract);
+        addOperator("multiply", "*", Priority.HIGH, BigDecimal::multiply);
+        addOperator("divide", "/", Priority.HIGH, (left, right) -> {
+            if (right.equals(BigDecimal.ZERO)) {
+                throw new InvalidExpressionException("Cannot divide by zero");
+            }
+            return left.divide(right, 2, RoundingMode.HALF_UP);
+        });
     }
 }

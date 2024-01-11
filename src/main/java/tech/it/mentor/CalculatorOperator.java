@@ -1,8 +1,6 @@
 package tech.it.mentor;
 
-import java.math.BigDecimal;
-
-public abstract class CalculatorOperator {
+public abstract class CalculatorOperator implements ArithmeticOperation {
 
     private final String name;
     private final Priority priority;
@@ -25,6 +23,4 @@ public abstract class CalculatorOperator {
     public Priority getPriority() {
         return priority;
     }
-
-    public abstract BigDecimal action(BigDecimal leftOperand, BigDecimal rightOperand);
 }

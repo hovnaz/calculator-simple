@@ -5,6 +5,8 @@ import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Calculator {
 
@@ -17,15 +19,30 @@ public class Calculator {
     public BigDecimal calc(String input) {
         input = input.replaceAll("\\s", "");
         validateExpression(input);
-        return performCalculation(input);
+        BigDecimal result = performCalculation(input);
+        return roundToIntegerOrZero(result);
     }
 
     private void validateExpression(String expression) {
-
+        extractNumbers(expression);
         if (!expression.matches(".*[0-9]+[+\\-*/]+[0-9]+.*") ||
                 expression.matches(".*[+\\-*/]{2,}.*") ||
                 expression.matches(".*[+\\-*/]$")) {
             throw new InvalidExpressionException("Invalid expression: " + expression);
+        }
+    }
+
+    public static void extractNumbers(String inputString) {
+
+        Pattern pattern = Pattern.compile("\\d+\\.\\d+|\\d+");
+        Matcher matcher = pattern.matcher(inputString);
+
+        while (matcher.find()) {
+            String number = matcher.group();
+            String numberInt = number.contains(".") ? number.substring(0, number.indexOf('.')) : number;
+            if (numberInt.length() > 1 && numberInt.charAt(0) == '0') {
+                throw new InvalidExpressionException("Invalid number: " + number);
+            }
         }
     }
 
@@ -88,5 +105,10 @@ public class Calculator {
             }
             return left.divide(right, 2, RoundingMode.HALF_UP);
         });
+    }
+
+    private static BigDecimal roundToIntegerOrZero(BigDecimal originalResult) {
+
+        return originalResult.signum() == 0 ? BigDecimal.ZERO : originalResult.stripTrailingZeros();
     }
 }

@@ -21,7 +21,8 @@ public class CalculatorTest {
         assertEquals(new BigDecimal("5.1"), calculator.calc("5+0.1"));
         assertEquals(new BigDecimal(7), calculator.calc("2+3*2-1"));
         assertEquals(new BigDecimal(736), calculator.calc("11+10/2*345-1000"));
-//        assertEquals(new BigDecimal(-8264), calculator.calc("11+10/2*345-10000"));
+        assertEquals(new BigDecimal(-8264), calculator.calc("11+10/2*345-10000"));
+        assertEquals(new BigDecimal(-9989), calculator.calc("11-10000"));
     }
 
     @Test
@@ -60,5 +61,4 @@ public class CalculatorTest {
         assertThrows(InvalidExpressionException.class, () -> calculator.calc("1E2")); // Scientific notation
         assertThrows(InvalidExpressionException.class, () -> calculator.calc("1^2")); // Unsupported operator
     }
-
 }

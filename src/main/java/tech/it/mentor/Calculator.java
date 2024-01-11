@@ -19,6 +19,7 @@ public class Calculator {
     public BigDecimal calc(String input) {
         input = input.replaceAll("\\s", "");
         validateExpression(input);
+        input = input.replaceAll("-", "_");
         BigDecimal result = performCalculation(input);
         return roundToIntegerOrZero(result);
     }
@@ -63,8 +64,8 @@ public class Calculator {
     }
 
     private String performOperationAtIndex(String expression, int operatorIndex) {
-        String[] leftOperands = expression.substring(0, operatorIndex).split("[\\+\\-\\*\\/]");
-        String[] rightOperands = expression.substring(operatorIndex + 1).split("[\\+\\-\\*\\/]");
+        String[] leftOperands = expression.substring(0, operatorIndex).split("[\\+\\_\\*\\/]");
+        String[] rightOperands = expression.substring(operatorIndex + 1).split("[\\+\\_\\*\\/]");
 
         BigDecimal leftOperand = new BigDecimal(leftOperands[leftOperands.length - 1]);
         BigDecimal rightOperand = new BigDecimal(rightOperands[0]);
@@ -97,7 +98,7 @@ public class Calculator {
 
     private void initializeOperators() {
         addOperator("plus", "+", Priority.LOW, BigDecimal::add);
-        addOperator("minus", "-", Priority.LOW, BigDecimal::subtract);
+        addOperator("minus", "_", Priority.LOW, BigDecimal::subtract);
         addOperator("multiply", "*", Priority.HIGH, BigDecimal::multiply);
         addOperator("divide", "/", Priority.HIGH, (left, right) -> {
             if (right.equals(BigDecimal.ZERO)) {

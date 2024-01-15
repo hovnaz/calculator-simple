@@ -4,8 +4,8 @@ import org.junit.Test;
 
 import java.math.BigDecimal;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 public class CalculatorTest {
 

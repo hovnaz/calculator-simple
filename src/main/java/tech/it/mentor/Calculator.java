@@ -1,27 +1,60 @@
 package tech.it.mentor;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.BiFunction;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Calculator {
 
-    private final Map<String, CalculatorOperator> operators = new HashMap<>();
+    public int calculate(String input) {
+        List<Integer> operands = extractNumbers(input);
+        Integer firstOperand = operands.get(0);
+        int secondOperand = operands.get(1);
+        char operator = input.charAt(firstOperand.toString().length());
+        validateExpression(input);
+        validateOperands(firstOperand, secondOperand);
 
-    public Calculator() {
-        initializeOperators();
+        return performCalculation(firstOperand, operator, secondOperand);
     }
 
-    public BigDecimal calc(String input) {
-        input = input.replaceAll("\\s", "");
-        validateExpression(input);
-        input = input.replaceAll("-", "_");
-        BigDecimal result = performCalculation(input);
-        return roundToIntegerOrZero(result);
+    private int performCalculation(int firstOperand, char operator, int secondOperand) {
+        return switch (operator) {
+            case '+' -> firstOperand + secondOperand;
+            case '-' -> firstOperand - secondOperand;
+            case '*' -> firstOperand * secondOperand;
+            case '/' -> performDivision(firstOperand, secondOperand);
+            default -> throw new InvalidExpressionException("Invalid operator");
+        };
+    }
+
+    private int performDivision(int firstOperand, int secondOperand) {
+        if (secondOperand == 0) {
+            throw new InvalidExpressionException("Division by zero");
+        }
+        return firstOperand / secondOperand;
+    }
+
+    private List<Integer> extractNumbers(String inputString) {
+        List<Integer> numbers = new ArrayList<>(2);
+
+        Pattern pattern = Pattern.compile("\\d+");
+        Matcher matcher = pattern.matcher(inputString);
+
+        while (matcher.find()) {
+            String number = matcher.group();
+            try {
+                numbers.add(Integer.parseInt(number));
+            } catch (NumberFormatException e) {
+                throw new InvalidExpressionException("Invalid number format: " + number);
+            }
+        }
+
+        if (numbers.size() != 2) {
+            throw new InvalidExpressionException("Exactly 2 numbers should be present in the input: " + inputString);
+        }
+
+        return numbers;
     }
 
     private void validateExpression(String expression) {
@@ -47,69 +80,13 @@ public class Calculator {
         }
     }
 
-    private int findFirstPriorityOperatorIndex(String input) {
-        int lowestPriority = 0;
-        int operatorIndex = -1;
-
-        for (CalculatorOperator operator : operators.values()) {
-            int index = input.indexOf(operator.getOperator());
-
-            if (index != -1 && (operator.getPriority().getValue() >= lowestPriority && (index < operatorIndex || operatorIndex == -1) || operator.getPriority().getValue() > lowestPriority)) {
-                lowestPriority = operator.getPriority().getValue();
-                operatorIndex = index;
-            }
-        }
-
-        return operatorIndex;
-    }
-
-    private String performOperationAtIndex(String expression, int operatorIndex) {
-        String[] leftOperands = expression.substring(0, operatorIndex).split("[\\+\\_\\*\\/]");
-        String[] rightOperands = expression.substring(operatorIndex + 1).split("[\\+\\_\\*\\/]");
-
-        BigDecimal leftOperand = new BigDecimal(leftOperands[leftOperands.length - 1]);
-        BigDecimal rightOperand = new BigDecimal(rightOperands[0]);
-        BigDecimal result = operators.get(String.valueOf(expression.charAt(operatorIndex))).performOperation(leftOperand, rightOperand);
-
-        StringBuilder builder = new StringBuilder(expression);
-        builder.replace(operatorIndex - leftOperand.toString().length(), operatorIndex + rightOperand.toString().length() + 1, result.toString());
-        return builder.toString();
-    }
-
-    private BigDecimal performCalculation(String expression) {
-
-        while (true) {
-            int priorityOperatorIndex = findFirstPriorityOperatorIndex(expression);
-            if (priorityOperatorIndex == -1) {
-                return new BigDecimal(expression);
-            }
-            expression = performOperationAtIndex(expression, priorityOperatorIndex);
+    private void validateOperands(int firstOperand, int secondOperand) {
+        if (isValidOperand(firstOperand) || isValidOperand(secondOperand)) {
+            throw new InvalidExpressionException("Invalid operands. Numbers should be between 1 and 10 (inclusive).");
         }
     }
 
-    private void addOperator(String name, String symbol, Priority priority, BiFunction<BigDecimal, BigDecimal, BigDecimal> operation) {
-        operators.put(symbol, new CalculatorOperator(name, symbol, priority) {
-            @Override
-            public BigDecimal performOperation(BigDecimal leftOperand, BigDecimal rightOperand) {
-                return operation.apply(leftOperand, rightOperand);
-            }
-        });
-    }
-
-    private void initializeOperators() {
-        addOperator("plus", "+", Priority.LOW, BigDecimal::add);
-        addOperator("minus", "_", Priority.LOW, BigDecimal::subtract);
-        addOperator("multiply", "*", Priority.HIGH, BigDecimal::multiply);
-        addOperator("divide", "/", Priority.HIGH, (left, right) -> {
-            if (right.equals(BigDecimal.ZERO)) {
-                throw new InvalidExpressionException("Cannot divide by zero");
-            }
-            return left.divide(right, 2, RoundingMode.HALF_UP);
-        });
-    }
-
-    private static BigDecimal roundToIntegerOrZero(BigDecimal originalResult) {
-
-        return originalResult.signum() == 0 ? BigDecimal.ZERO : originalResult.stripTrailingZeros();
+    private boolean isValidOperand(int operand) {
+        return operand < 1 || operand > 10;
     }
 }
